@@ -2,14 +2,105 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sniper J GM 模擬器</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Sniper J GM 模擬器 v0.2</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f2f2f2; }
+    h1 { color: #2c3e50; }
+    button { margin: 5px; padding: 10px; font-size: 16px; }
+    .player { background: white; margin: 10px 0; padding: 10px; border-radius: 6px; }
+    .section { margin-top: 30px; }
+  </style>
 </head>
 <body>
-  <h1>🏀 Sniper J GM 模擬器 v0.1</h1>
-  <button onclick="showTeam()">顯示勇士隊陣容</button>
-  <ul id="roster"></ul>
-  <script src="script.js"></script>
+  <h1>🏀 Sniper J GM 模擬器 v0.2</h1>
+
+  <div class="section">
+    <button onclick="showWarriors()">顯示勇士隊球員</button>
+    <button onclick="showFreeAgents()">自由市場</button>
+  </div>
+
+  <div id="team"></div>
+  <div id="freeAgents"></div>
+
+  <script>
+    const warriors = [
+      { name: "Stephen Curry", rating: "S" },
+      { name: "Klay Thompson", rating: "B+" },
+      { name: "Draymond Green", rating: "B" },
+      { name: "Jonathan Kuminga", rating: "B" },
+      { name: "Andrew Wiggins", rating: "B+" },
+      { name: "Moses Moody", rating: "C+" }
+    ];
+
+    const thunder = [
+      { name: "Shai Gilgeous-Alexander", rating: "S" },
+      { name: "Josh Giddey", rating: "B+" },
+      { name: "Jalen Williams", rating: "A-" }
+    ];
+
+    const freeAgents = [
+      { name: "Malik Beasley", rating: "B" },
+      { name: "Robert Covington", rating: "B-" },
+      { name: "Will Barton", rating: "C+" },
+      { name: "Kelly Oubre Jr.", rating: "B" }
+    ];
+
+    function showWarriors() {
+      const container = document.getElementById("team");
+      container.innerHTML = "<h2>勇士隊陣容</h2>";
+      warriors.forEach((player, index) => {
+        container.innerHTML += `
+          <div class="player">
+            <strong>${player.name}</strong> - 評價：${player.rating}<br />
+            <button onclick="trainPlayer(${index})">訓練</button>
+            <button onclick="tradePlayer(${index})">交易</button>
+          </div>
+        `;
+      });
+    }
+
+    function showFreeAgents() {
+      const container = document.getElementById("freeAgents");
+      container.innerHTML = "<h2>可簽自由球員</h2>";
+      freeAgents.forEach((player, index) => {
+        container.innerHTML += `
+          <div class="player">
+            <strong>${player.name}</strong> - 評價：${player.rating}<br />
+            <button onclick="signPlayer(${index})">簽下</button>
+          </div>
+        `;
+      });
+    }
+
+    function trainPlayer(index) {
+      const ratings = ["C", "C+", "B-", "B", "B+", "A-", "A", "A+", "S"];
+      let current = warriors[index].rating;
+      let idx = ratings.indexOf(current);
+      if (idx < ratings.length - 1) {
+        warriors[index].rating = ratings[idx + 1];
+        alert(`${warriors[index].name} 訓練成功！評價升為 ${warriors[index].rating}`);
+      } else {
+        alert(`${warriors[index].name} 已達最高評價！`);
+      }
+      showWarriors();
+    }
+
+    function signPlayer(index) {
+      warriors.push(freeAgents[index]);
+      alert(`${freeAgents[index].name} 加入勇士！`);
+      freeAgents.splice(index, 1);
+      showWarriors();
+      showFreeAgents();
+    }
+
+    function tradePlayer(index) {
+      const warrior = warriors[index];
+      const other = thunder[Math.floor(Math.random() * thunder.length)];
+      alert(`你用 ${warrior.name} 換來 ${other.name}！`);
+      warriors.splice(index, 1);
+      warriors.push(other);
+      showWarriors();
+    }
+  </script>
 </body>
 </html>
