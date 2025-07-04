@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>Sniper J GM 模擬器 v0.2.1</title>
+  <title>Sniper J GM 模擬器</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f2f2f2; }
     h1 { color: #2c3e50; }
@@ -14,20 +14,18 @@
 </head>
 <body>
   <h1>🏀 Sniper J GM 模擬器 v0.2.1</h1>
-
   <div class="section">
     <button onclick="showWarriors()">顯示勇士隊球員</button>
     <button onclick="showFreeAgents()">自由市場</button>
     <button onclick="selectTeam()">查看其他隊伍</button>
     <div id="teamSelectArea"></div>
   </div>
-
   <div id="team"></div>
   <div id="freeAgents"></div>
   <div id="otherTeam"></div>
 
   <script>
-    // 勇士隊球員
+    // 👇 全部 JavaScript 程式碼從這裡開始
     const warriors = [
       { name: "Stephen Curry", rating: "S" },
       { name: "Klay Thompson", rating: "B+" },
@@ -37,7 +35,6 @@
       { name: "Moses Moody", rating: "C+" }
     ];
 
-    // 自由球員
     const freeAgents = [
       { name: "Malik Beasley", rating: "B" },
       { name: "Robert Covington", rating: "B-" },
@@ -45,7 +42,6 @@
       { name: "Kelly Oubre Jr.", rating: "B" }
     ];
 
-    // 他隊球員
     const otherTeams = {
       "雷霆": [
         { name: "Shai Gilgeous-Alexander", rating: "S" },
