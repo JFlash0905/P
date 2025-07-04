@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>Sniper J GM 模擬器 v0.2.1</title>
-
-  <!-- ✅ 第一段：CSS 樣式 -->
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f2f2f2; }
     h1 { color: #2c3e50; }
@@ -14,9 +12,7 @@
     select { padding: 5px 10px; margin-top: 10px; }
   </style>
 </head>
-
 <body>
-  <!-- ✅ HTML 主畫面 -->
   <h1>🏀 Sniper J GM 模擬器 v0.2.1</h1>
 
   <div class="section">
@@ -30,22 +26,150 @@
   <div id="freeAgents"></div>
   <div id="otherTeam"></div>
 
-  <!-- ✅ 第二段 + 第三段：JS 資料 + 功能 -->
   <script>
-    // 第二段：球員資料
-    const warriors = [ ... ];
-    const freeAgents = [ ... ];
-    const otherTeams = { ... };
+    // 勇士隊球員
+    const warriors = [
+      { name: "Stephen Curry", rating: "S" },
+      { name: "Klay Thompson", rating: "B+" },
+      { name: "Draymond Green", rating: "B" },
+      { name: "Jonathan Kuminga", rating: "B" },
+      { name: "Andrew Wiggins", rating: "B+" },
+      { name: "Moses Moody", rating: "C+" }
+    ];
 
-    // 第三段：功能區塊（顯示、簽約、訓練、交易）
-    function showWarriors() { ... }
-    function trainPlayer(index) { ... }
-    function signPlayer(index) { ... }
-    function selectTeam() { ... }
-    function showOtherTeam(teamName) { ... }
-    function tradePlayer(index) { ... }
-    function tradeFor(team, index) { ... }
+    // 自由球員
+    const freeAgents = [
+      { name: "Malik Beasley", rating: "B" },
+      { name: "Robert Covington", rating: "B-" },
+      { name: "Will Barton", rating: "C+" },
+      { name: "Kelly Oubre Jr.", rating: "B" }
+    ];
+
+    // 他隊球員
+    const otherTeams = {
+      "雷霆": [
+        { name: "Shai Gilgeous-Alexander", rating: "S" },
+        { name: "Jalen Williams", rating: "A" },
+        { name: "Chet Holmgren", rating: "A-" }
+      ],
+      "灰狼": [
+        { name: "Anthony Edwards", rating: "S" },
+        { name: "Rudy Gobert", rating: "B+" },
+        { name: "Karl-Anthony Towns", rating: "A" }
+      ],
+      "金塊": [
+        { name: "Nikola Jokic", rating: "S+" },
+        { name: "Jamal Murray", rating: "A" },
+        { name: "Aaron Gordon", rating: "B+" }
+      ],
+      "灰熊": [
+        { name: "Ja Morant", rating: "S" },
+        { name: "Jaren Jackson Jr.", rating: "A" },
+        { name: "Desmond Bane", rating: "A-" }
+      ],
+      "熱火": [
+        { name: "Bam Adebayo", rating: "A+" },
+        { name: "Tyler Herro", rating: "A-" },
+        { name: "Jaime Jaquez Jr.", rating: "B+" }
+      ]
+    };
+
+    function showWarriors() {
+      const container = document.getElementById("team");
+      container.innerHTML = "<h2>勇士隊陣容</h2>";
+      warriors.forEach((player, index) => {
+        container.innerHTML += `
+          <div class="player">
+            <strong>${player.name}</strong> - 評價：${player.rating}<br />
+            <button onclick="trainPlayer(${index})">訓練</button>
+            <button onclick="tradePlayer(${index})">交易他隊球員</button>
+          </div>
+        `;
+      });
+    }
+
+    function showFreeAgents() {
+      const container = document.getElementById("freeAgents");
+      container.innerHTML = "<h2>可簽自由球員</h2>";
+      freeAgents.forEach((player, index) => {
+        container.innerHTML += `
+          <div class="player">
+            <strong>${player.name}</strong> - 評價：${player.rating}<br />
+            <button onclick="signPlayer(${index})">簽下</button>
+          </div>
+        `;
+      });
+    }
+
+    function trainPlayer(index) {
+      const ratings = ["C", "C+", "B-", "B", "B+", "A-", "A", "A+", "S", "S+"];
+      let current = warriors[index].rating;
+      let idx = ratings.indexOf(current);
+      if (idx < ratings.length - 1) {
+        warriors[index].rating = ratings[idx + 1];
+        alert(`${warriors[index].name} 訓練成功！評價升為 ${warriors[index].rating}`);
+      } else {
+        alert(`${warriors[index].name} 已達最高評價！`);
+      }
+      showWarriors();
+    }
+
+    function signPlayer(index) {
+      warriors.push(freeAgents[index]);
+      alert(`${freeAgents[index].name} 加入勇士！`);
+      freeAgents.splice(index, 1);
+      showWarriors();
+      showFreeAgents();
+    }
+
+    function selectTeam() {
+      const area = document.getElementById("teamSelectArea");
+      area.innerHTML = `
+        <h2>選擇一支球隊：</h2>
+        <select id="teamSelect" onchange="showOtherTeam(this.value)">
+          <option value="">請選擇</option>
+          ${Object.keys(otherTeams).map(t => `<option value="${t}">${t}</option>`).join("")}
+        </select>
+      `;
+    }
+
+    function showOtherTeam(teamName) {
+      if (!teamName) return;
+      const container = document.getElementById("otherTeam");
+      const players = otherTeams[teamName];
+      container.innerHTML = `<h2>${teamName} 球員</h2>`;
+      players.forEach((player, index) => {
+        container.innerHTML += `
+          <div class="player">
+            <strong>${player.name}</strong> - 評價：${player.rating}<br />
+            <button onclick="tradeFor('${teamName}', ${index})">發起交易</button>
+          </div>
+        `;
+      });
+    }
+
+    function tradePlayer(warriorIndex) {
+      const confirmTrade = prompt("請輸入你要換到哪隊的球員（例如：灰狼 Anthony Edwards）");
+      if (!confirmTrade) return;
+      alert(`目前僅支援從「他隊介面」發起交易，請用『查看其他隊伍』功能進行操作。`);
+    }
+
+    function tradeFor(team, index) {
+      const otherPlayer = otherTeams[team][index];
+      const warriorNames = warriors.map(w => w.name).join("\n");
+      const input = prompt(`你要用哪位勇士球員換 ${otherPlayer.name}？請輸入名稱：\n\n${warriorNames}`);
+      const warriorIndex = warriors.findIndex(p => p.name === input);
+      if (warriorIndex >= 0) {
+        const traded = warriors[warriorIndex];
+        warriors[warriorIndex] = otherPlayer;
+        otherTeams[team][index] = traded;
+        alert(`交易成功！你用 ${traded.name} 換來了 ${otherPlayer.name}！`);
+        showWarriors();
+        showOtherTeam(team);
+      } else {
+        alert("找不到這位勇士球員，請確保名稱正確！");
+      }
+    }
   </script>
-
 </body>
 </html>
