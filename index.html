@@ -31,6 +31,7 @@
   <div id="gameResult"></div>
 
   <script>
+    // --- 資料定義區 ---
     const warriors = [
       { name: "Stephen Curry", rating: "S", trained: false },
       { name: "Klay Thompson", rating: "B+", trained: false },
@@ -75,24 +76,26 @@
       ]
     };
 
+    // --- 工具函式 ---
     function getAverageRating() {
-      const map = { "C": 1, "C+": 2, "B-": 3, "B": 4, "B+": 5, "A-": 6, "A": 7, "A+": 8, "S": 9, "S+": 10 };
+      const ratingMap = { "C": 1, "C+": 2, "B-": 3, "B": 4, "B+": 5, "A-": 6, "A": 7, "A+": 8, "S": 9, "S+": 10 };
       let total = 0;
-      warriors.forEach(p => total += map[p.rating] || 1);
+      warriors.forEach(p => total += ratingMap[p.rating] || 1);
       return total / warriors.length;
     }
 
+    // --- 主功能 ---
     function showWarriors() {
       const container = document.getElementById("team");
       container.innerHTML = "<h2>勇士隊陣容</h2>";
-      warriors.forEach((p, i) => {
-        const disabled = p.trained ? "disabled" : "";
-        const tag = p.trained ? "（已訓練）" : "";
+      warriors.forEach((player, index) => {
+        const trainedClass = player.trained ? 'disabled' : '';
+        const trainedText = player.trained ? '（已訓練）' : '';
         container.innerHTML += `
           <div class="player">
-            <strong>${p.name}</strong> - 評價：${p.rating} ${tag}<br />
-            <button class="${disabled}" onclick="trainPlayer(${i})">訓練</button>
-            <button onclick="tradePlayer(${i})">交易他隊球員</button>
+            <strong>${player.name}</strong> - 評價：${player.rating} ${trainedText}<br />
+            <button class="${trainedClass}" onclick="trainPlayer(${index})">訓練</button>
+            <button onclick="tradePlayer(${index})">交易他隊球員</button>
           </div>
         `;
       });
@@ -100,11 +103,11 @@
 
     function trainPlayer(index) {
       if (warriors[index].trained) return;
-      const ratingList = ["C", "C+", "B-", "B", "B+", "A-", "A", "A+", "S", "S+"];
+      const ratings = ["C", "C+", "B-", "B", "B+", "A-", "A", "A+", "S", "S+"];
       let current = warriors[index].rating;
-      let idx = ratingList.indexOf(current);
-      if (idx < ratingList.length - 1) {
-        warriors[index].rating = ratingList[idx + 1];
+      let idx = ratings.indexOf(current);
+      if (idx < ratings.length - 1) {
+        warriors[index].rating = ratings[idx + 1];
         warriors[index].trained = true;
         alert(`${warriors[index].name} 訓練成功！評價升為 ${warriors[index].rating}`);
       } else {
@@ -115,20 +118,20 @@
 
     function resetTraining() {
       warriors.forEach(p => p.trained = false);
-      alert("訓練日已重置！");
+      alert("訓練日已重置！所有球員可再次訓練。");
       showWarriors();
     }
 
     function showFreeAgents() {
       const container = document.getElementById("freeAgents");
       container.innerHTML = "<h2>可簽自由球員</h2>";
-      const avg = getAverageRating();
-      freeAgents.forEach((p, i) => {
-        const chance = Math.min(95, p.signChance + Math.floor(avg));
+      const avgRating = getAverageRating();
+      freeAgents.forEach((player, index) => {
+        const chance = Math.min(95, player.signChance + Math.floor(avgRating));
         container.innerHTML += `
           <div class="player">
-            <strong>${p.name}</strong> - 評價：${p.rating}（簽約機率約 ${chance}%）<br />
-            <button onclick="signPlayer(${i}, ${chance})">簽下</button>
+            <strong>${player.name}</strong> - 評價：${player.rating}（簽約機率：約 ${chance}%）<br />
+            <button onclick="signPlayer(${index}, ${chance})">簽下</button>
           </div>
         `;
       });
@@ -138,10 +141,10 @@
       const rand = Math.random() * 100;
       if (rand <= chance) {
         warriors.push({ ...freeAgents[index], trained: false });
-        alert(`${freeAgents[index].name} 加入勇士！`);
+        alert(`${freeAgents[index].name} 成功加入勇士！`);
         freeAgents.splice(index, 1);
       } else {
-        alert(`${freeAgents[index].name} 拒絕加入你的球隊。`);
+        alert(`${freeAgents[index].name} 拒絕加入你的球隊...`);
       }
       showWarriors();
       showFreeAgents();
@@ -151,45 +154,46 @@
       const area = document.getElementById("teamSelectArea");
       area.innerHTML = `
         <h2>選擇一支球隊：</h2>
-        <select onchange="showOtherTeam(this.value)">
+        <select id="teamSelect" onchange="showOtherTeam(this.value)">
           <option value="">請選擇</option>
           ${Object.keys(otherTeams).map(t => `<option value="${t}">${t}</option>`).join("")}
         </select>
       `;
     }
 
-    function showOtherTeam(team) {
-      if (!team) return;
-      const players = otherTeams[team];
+    function showOtherTeam(teamName) {
+      if (!teamName) return;
       const container = document.getElementById("otherTeam");
-      container.innerHTML = `<h2>${team} 球員</h2>`;
-      players.forEach((p, i) => {
+      const players = otherTeams[teamName];
+      container.innerHTML = `<h2>${teamName} 球員</h2>`;
+      players.forEach((player, index) => {
         container.innerHTML += `
           <div class="player">
-            <strong>${p.name}</strong> - 評價：${p.rating}<br />
-            <button onclick="tradeFor('${team}', ${i})">發起交易</button>
+            <strong>${player.name}</strong> - 評價：${player.rating}<br />
+            <button onclick="tradeFor('${teamName}', ${index})">發起交易</button>
           </div>
         `;
       });
     }
 
-    function tradePlayer(index) {
-      alert("請先選擇其他隊伍並從該隊發起交易！");
+    function tradePlayer(warriorIndex) {
+      alert("請用『查看其他隊伍』後發起交易！");
     }
 
     function tradeFor(team, index) {
       const otherPlayer = otherTeams[team][index];
-      const input = prompt(`你要用哪位勇士球員換 ${otherPlayer.name}？\n${warriors.map(w => w.name).join("\n")}`);
-      const wIndex = warriors.findIndex(w => w.name === input);
-      if (wIndex >= 0) {
-        const myPlayer = warriors[wIndex];
-        warriors[wIndex] = otherPlayer;
-        otherTeams[team][index] = myPlayer;
-        alert(`交易成功！你用 ${myPlayer.name} 換來了 ${otherPlayer.name}`);
+      const warriorNames = warriors.map(w => w.name).join("\n");
+      const input = prompt(`你要用哪位勇士球員換 ${otherPlayer.name}？\n請輸入名稱：\n${warriorNames}`);
+      const warriorIndex = warriors.findIndex(p => p.name === input);
+      if (warriorIndex >= 0) {
+        const traded = warriors[warriorIndex];
+        warriors[warriorIndex] = otherPlayer;
+        otherTeams[team][index] = traded;
+        alert(`交易成功！你用 ${traded.name} 換來了 ${otherPlayer.name}！`);
         showWarriors();
         showOtherTeam(team);
       } else {
-        alert("找不到這位勇士球員，請確認名稱拼對！");
+        alert("找不到這位勇士球員，請確認名字拼對！");
       }
     }
 
@@ -198,32 +202,36 @@
         "C": 5, "C+": 7, "B-": 9, "B": 10, "B+": 12,
         "A-": 14, "A": 15, "A+": 17, "S": 18, "S+": 20
       };
-      const teams = Object.keys(otherTeams);
-      const oppTeam = teams[Math.floor(Math.random() * teams.length)];
-      const oppPlayers = otherTeams[oppTeam];
-      let myScore = 0, oppScore = 0;
-      let mvp = "", top = 0;
+      const opponentTeams = Object.keys(otherTeams);
+      const opponentName = opponentTeams[Math.floor(Math.random() * opponentTeams.length)];
+      const opponentPlayers = otherTeams[opponentName];
+
+      let ourScore = 0;
+      let oppScore = 0;
+      let mvp = null;
+      let mvpScore = -1;
 
       warriors.forEach(p => {
-        const perf = Math.floor((ratingToScore[p.rating] || 10) + Math.random() * 6);
-        myScore += perf;
-        if (perf > top) {
-          top = perf;
+        const base = ratingToScore[p.rating] || 8;
+        const perf = Math.floor(base + Math.random() * 6);
+        ourScore += perf;
+        if (perf > mvpScore) {
           mvp = p.name;
+          mvpScore = perf;
         }
       });
 
-      oppPlayers.forEach(p => {
-        oppScore += Math.floor((ratingToScore[p.rating] || 10) + Math.random() * 6);
+      opponentPlayers.forEach(p => {
+        const base = ratingToScore[p.rating] || 8;
+        oppScore += Math.floor(base + Math.random() * 6);
       });
 
       const result = document.getElementById("gameResult");
-      result.innerHTML = `
-        <h2>模擬比賽結果 🏀</h2>
-        <p>勇士 vs ${oppTeam}</p>
-        <p>比分：<strong>${myScore} - ${oppScore}</strong></p>
-        <p>${myScore > oppScore ? "🎉 勇士勝利！" : "😢 勇士落敗..."}</p>
-        <p>MVP：${mvp}（得分 ${top}）</p>
+      result.innerHTML = `<h2>模擬比賽結果 🏀</h2>
+        <p>你 vs ${opponentName}</p>
+        <p>比分：<strong>${ourScore} - ${oppScore}</strong></p>
+        <p>${ourScore > oppScore ? "🎉 勇士勝利！" : "😢 勇士落敗..."}</p>
+        <p>MVP：${mvp}（得分 ${mvpScore}）</p>
       `;
     }
   </script>
