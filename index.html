@@ -17,11 +17,11 @@
   <h1>🏀 Sniper J GM 模擬器 v0.5</h1>
 
   <div class="section">
-    <button onclick="showWarriors()">顯示勇士隊球員</button>
-    <button onclick="showFreeAgents()">自由市場</button>
-    <button onclick="selectTeam()">查看其他隊伍</button>
-    <button onclick="simulateGame()">模擬比賽</button>
-    <button onclick="resetTraining()">重置訓練日</button>
+    <button id="showWarriorsBtn">顯示勇士隊球員</button>
+    <button id="showFreeAgentsBtn">自由市場</button>
+    <button id="selectTeamBtn">查看其他隊伍</button>
+    <button id="simulateGameBtn">模擬比賽</button>
+    <button id="resetTrainingBtn">重置訓練日</button>
     <div id="teamSelectArea"></div>
   </div>
 
@@ -62,16 +62,6 @@
         { name: "Nikola Jokic", rating: "S+" },
         { name: "Jamal Murray", rating: "A" },
         { name: "Aaron Gordon", rating: "B+" }
-      ],
-      "灰熊": [
-        { name: "Ja Morant", rating: "S" },
-        { name: "Jaren Jackson Jr.", rating: "A" },
-        { name: "Desmond Bane", rating: "A-" }
-      ],
-      "熱火": [
-        { name: "Bam Adebayo", rating: "A+" },
-        { name: "Tyler Herro", rating: "A-" },
-        { name: "Jaime Jaquez Jr.", rating: "B+" }
       ]
     };
 
@@ -81,12 +71,6 @@
       let total = 0;
       warriors.forEach(p => total += ratingMap[p.rating] || 1);
       return total / warriors.length;
-    }
-
-    function resetTraining() {
-      warriors.forEach(p => p.trained = false);
-      alert("訓練日已重置，全部球員可再次訓練！");
-      showWarriors();
     }
 
     function showWarriors() {
@@ -173,6 +157,7 @@
           ${Object.keys(otherTeams).map(t => `<option value="${t}">${t}</option>`).join("")}
         </select>
       `;
+
       document.getElementById("teamSelect").addEventListener("change", e => {
         showOtherTeam(e.target.value);
       });
@@ -181,9 +166,8 @@
     function showOtherTeam(teamName) {
       if (!teamName) return;
       const container = document.getElementById("otherTeam");
-      container.innerHTML = `<h2>${teamName} 球員</h2>`;
       const players = otherTeams[teamName];
-
+      container.innerHTML = `<h2>${teamName} 球員</h2>`;
       players.forEach((player, index) => {
         const div = document.createElement("div");
         div.className = "player";
@@ -250,6 +234,15 @@
         <p>MVP：${mvp}（得分 ${mvpScore}）</p>
       `;
     }
+
+    // 綁定按鈕事件
+    window.onload = () => {
+      document.getElementById("showWarriorsBtn").addEventListener("click", showWarriors);
+      document.getElementById("showFreeAgentsBtn").addEventListener("click", showFreeAgents);
+      document.getElementById("selectTeamBtn").addEventListener("click", selectTeam);
+      document.getElementById("simulateGameBtn").addEventListener("click", simulateGame);
+      document.getElementById("resetTrainingBtn").addEventListener("click", resetTraining);
+    };
   </script>
 </body>
 </html>
