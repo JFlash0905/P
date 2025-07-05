@@ -31,7 +31,6 @@
   <div id="gameResult"></div>
 
   <script>
-    // --- 資料定義區 ---
     const warriors = [
       { name: "Stephen Curry", rating: "S", trained: false },
       { name: "Klay Thompson", rating: "B+", trained: false },
@@ -76,15 +75,11 @@
       ]
     };
 
-    // --- 工具函式 ---
-    function getAverageRating() {
-      const ratingMap = { "C": 1, "C+": 2, "B-": 3, "B": 4, "B+": 5, "A-": 6, "A": 7, "A+": 8, "S": 9, "S+": 10 };
-      let total = 0;
-      warriors.forEach(p => total += ratingMap[p.rating] || 1);
-      return total / warriors.length;
-    }
+    const ratingToScore = {
+      "C": 5, "C+": 7, "B-": 9, "B": 10, "B+": 12,
+      "A-": 14, "A": 15, "A+": 17, "S": 18, "S+": 20
+    };
 
-    // --- 主功能 ---
     function showWarriors() {
       const container = document.getElementById("team");
       container.innerHTML = "<h2>勇士隊陣容</h2>";
@@ -101,9 +96,31 @@
       });
     }
 
+    function showFreeAgents() {
+      const container = document.getElementById("freeAgents");
+      container.innerHTML = "<h2>可簽自由球員</h2>";
+      const avgRating = getAverageRating();
+      freeAgents.forEach((player, index) => {
+        const chance = Math.min(95, player.signChance + Math.floor(avgRating));
+        container.innerHTML += `
+          <div class="player">
+            <strong>${player.name}</strong> - 評價：${player.rating}（簽約機率：約 ${chance}%）<br />
+            <button onclick="signPlayer(${index}, ${chance})">簽下</button>
+          </div>
+        `;
+      });
+    }
+
+    function getAverageRating() {
+      const map = ratingToScore;
+      let total = 0;
+      warriors.forEach(p => total += map[p.rating] || 1);
+      return total / warriors.length;
+    }
+
     function trainPlayer(index) {
       if (warriors[index].trained) return;
-      const ratings = ["C", "C+", "B-", "B", "B+", "A-", "A", "A+", "S", "S+"];
+      const ratings = Object.keys(ratingToScore);
       let current = warriors[index].rating;
       let idx = ratings.indexOf(current);
       if (idx < ratings.length - 1) {
@@ -120,21 +137,6 @@
       warriors.forEach(p => p.trained = false);
       alert("訓練日已重置！所有球員可再次訓練。");
       showWarriors();
-    }
-
-    function showFreeAgents() {
-      const container = document.getElementById("freeAgents");
-      container.innerHTML = "<h2>可簽自由球員</h2>";
-      const avgRating = getAverageRating();
-      freeAgents.forEach((player, index) => {
-        const chance = Math.min(95, player.signChance + Math.floor(avgRating));
-        container.innerHTML += `
-          <div class="player">
-            <strong>${player.name}</strong> - 評價：${player.rating}（簽約機率：約 ${chance}%）<br />
-            <button onclick="signPlayer(${index}, ${chance})">簽下</button>
-          </div>
-        `;
-      });
     }
 
     function signPlayer(index, chance) {
@@ -177,7 +179,7 @@
     }
 
     function tradePlayer(warriorIndex) {
-      alert("請用『查看其他隊伍』後發起交易！");
+      alert("請用『查看其他隊伍』功能發起交易！");
     }
 
     function tradeFor(team, index) {
@@ -198,10 +200,6 @@
     }
 
     function simulateGame() {
-      const ratingToScore = {
-        "C": 5, "C+": 7, "B-": 9, "B": 10, "B+": 12,
-        "A-": 14, "A": 15, "A+": 17, "S": 18, "S+": 20
-      };
       const opponentTeams = Object.keys(otherTeams);
       const opponentName = opponentTeams[Math.floor(Math.random() * opponentTeams.length)];
       const opponentPlayers = otherTeams[opponentName];
@@ -231,8 +229,7 @@
         <p>你 vs ${opponentName}</p>
         <p>比分：<strong>${ourScore} - ${oppScore}</strong></p>
         <p>${ourScore > oppScore ? "🎉 勇士勝利！" : "😢 勇士落敗..."}</p>
-        <p>MVP：${mvp}（得分 ${mvpScore}）</p>
-      `;
+        <p>MVP：${mvp}（得分 ${mvpScore}）</p>`;
     }
   </script>
 </body>
