@@ -2,182 +2,243 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>Sniper J GM 模擬器 v0.7</title>
+  <title>Sniper J GM 模擬器 v0.7.1</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f2f2f2; }
     h1 { color: #2c3e50; }
     button { margin: 5px; padding: 10px; font-size: 16px; border-radius: 5px; cursor: pointer; }
-    .player { background: white; margin: 10px 0; padding: 10px; border-radius: 6px; display: flex; align-items: center; }
-    .player-card { width: 60px; height: 60px; background: #eee; margin-right: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-    .stats, .salaryCap { font-size: 12px; color: #555; margin-left: auto; text-align: right; }
+    .player { background: white; margin: 10px 0; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .player-card { width: 60px; height: 60px; background: #eee; margin-right: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .section { margin-top: 30px; }
+    select { padding: 5px 10px; margin-top: 10px; }
+    .disabled { opacity: 0.5; pointer-events: none; }
     .container { max-width: 800px; margin: auto; }
+    .stats { font-size: 12px; color: #555; text-align: right; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🏀 Sniper J GM 模擬器 v0.7</h1>
-    <div>
-      <button id="clearBtn">清空存檔</button>
-      <span id="dateDisplay"></span>
-    </div>
-    <div style="margin: 10px 0;">
-      💰 資金：<span id="moneyDisplay"></span>　
-      💵 薪資上限：<span id="salaryUsedDisplay"></span> / <span id="salaryCapDisplay"></span>
-    </div>
-    <div>
-      <button id="showWarriorsBtn">勇士陣容</button>
-      <button id="showFreeAgentsBtn">自由市場</button>
-      <button id="simulateGameBtn">模擬比賽</button>
-      <button id="resetTrainingBtn">重置訓練</button>
-    </div>
-    <div id="team"></div>
-    <div id="freeAgents"></div>
-    <div id="gameResult"></div>
+<div class="container">
+  <h1>🏀 Sniper J GM 模擬器 v0.7.1</h1>
+  <div>
+    <button id="clearBtn">清空存檔</button> 
+    <span id="dateDisplay"></span> 
+    <span id="statusDisplay" style="float:right;"></span>
   </div>
+  <div class="section">
+    <button id="showWarriorsBtn">勇士陣容</button>
+    <button id="showFreeAgentsBtn">自由市場</button>
+    <button id="selectTeamBtn">其他隊伍</button>
+    <button id="simulateGameBtn">模擬比賽</button>
+    <button id="resetTrainingBtn">重置訓練</button>
+    <div id="teamSelectArea"></div>
+  </div>
+  <div id="team"></div>
+  <div id="freeAgents"></div>
+  <div id="otherTeam"></div>
+  <div id="gameResult"></div>
+</div>
 
-  <script>
+<script>
+(() => {
+  const ratingMap = { "C":1,"C+":2,"B-":3,"B":4,"B+":5,"A-":6,"A":7,"A+":8,"S":9,"S+":10 };
+  let warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate;
+
+  function loadData() {
+    const saved = JSON.parse(localStorage.getItem("sj_gm_data")||"null");
+    if (saved) {
+      ({warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate} = saved);
+    } else {
+      money = 100;
+      salaryCap = 120;
+      lastSimDate = null;
+      warriors = [
+        { name:"Stephen Curry", rating:"S", trainedToday:false },
+        { name:"Klay Thompson", rating:"B+", trainedToday:false },
+        { name:"Draymond Green", rating:"B", trainedToday:false },
+        { name:"Jonathan Kuminga", rating:"B", trainedToday:false },
+        { name:"Andrew Wiggins", rating:"B+", trainedToday:false },
+        { name:"Moses Moody", rating:"C+", trainedToday:false }
+      ];
+      freeAgents = [
+        { name:"Malik Beasley", rating:"B", signChance:40 },
+        { name:"Robert Covington", rating:"B-", signChance:35 },
+        { name:"Kelly Oubre Jr.", rating:"B+", signChance:30 }
+      ];
+      otherTeams = {
+        "雷霆": [
+          { name:"Shai Gilgeous-Alexander", rating:"S" },
+          { name:"Jalen Williams", rating:"A" },
+          { name:"Chet Holmgren", rating:"A-" }
+        ],
+        "灰狼": [
+          { name:"Anthony Edwards", rating:"S" },
+          { name:"Rudy Gobert", rating:"B+" },
+          { name:"KAT", rating:"A" }
+        ],
+        "金塊": [
+          { name:"Jokic", rating:"S+" },
+          { name:"Jamal Murray", rating:"A" },
+          { name:"Aaron Gordon", rating:"B+" }
+        ],
+        "灰熊": [
+          { name:"Ja Morant", rating:"S" },
+          { name:"JJJ", rating:"A" },
+          { name:"Bane", rating:"A-" }
+        ],
+        "熱火": [
+          { name:"Bam Adebayo", rating:"A+" },
+          { name:"Herro", rating:"A-" },
+          { name:"Jaquez Jr.", rating:"B+" }
+        ]
+      };
+    }
+  }
+
+  function saveData() {
+    localStorage.setItem("sj_gm_data", JSON.stringify({warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate}));
+  }
+
+  function renderDate() {
+    const now = new Date();
+    const todayStr = now.toLocaleDateString();
+    document.getElementById("dateDisplay").textContent = `今天：${todayStr}`;
+    document.getElementById("statusDisplay").textContent = `💰 資金：$${money}M｜工資上限：${salaryCap}M`;
+    if (lastSimDate !== todayStr) simulateGameAuto(todayStr);
+  }
+
+  function getStar(rating){
+    const val = ratingMap[rating] || 1;
+    return "★".repeat(Math.floor(val/2)) + (val%2 ? "☆" : "");
+  }
+
+  function showWarriors() {
+    const div = document.getElementById("team");
+    div.innerHTML = "<h2>勇士隊陣容</h2>";
+    warriors.forEach((p, i) => {
+      const trainedText = p.trainedToday ? '（已訓練）' : '';
+      const star = getStar(p.rating);
+      div.innerHTML += `
+        <div class="player">
+          <div><strong>${p.name}</strong>｜評價：${p.rating} ${star} ${trainedText}</div>
+          <div class="stats">
+            <button ${p.trainedToday?"disabled":""} onclick="trainPlayer(${i})">Curry Style訓練</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  window.trainPlayer = (i) => {
+    const p = warriors[i];
+    if (p.trainedToday) return alert("今天已訓練過！");
+    let idx = Object.keys(ratingMap).indexOf(p.rating);
+    if (idx < Object.keys(ratingMap).length - 1) {
+      p.rating = Object.keys(ratingMap)[idx + 1];
+      p.trainedToday = true;
+      money -= 2;
+      alert(`${p.name} 完成 Curry Style 訓練！評價升為 ${p.rating}`);
+    } else {
+      alert(`${p.name} 已達最高評價！`);
+    }
+    showWarriors(); saveData();
+  };
+
+  function showFreeAgents() {
+    const div = document.getElementById("freeAgents");
+    div.innerHTML = "<h2>自由市場</h2>";
+    freeAgents.forEach((p, i) => {
+      const chance = Math.max(10, p.signChance - warriors.length);
+      const star = getStar(p.rating);
+      div.innerHTML += `
+        <div class="player">
+          <div><strong>${p.name}</strong>｜評價：${p.rating} ${star}</div>
+          <div class="stats">
+            <button onclick="signFA(${i}, ${chance})">簽下（機率${chance}%）</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  window.signFA = (i, chance) => {
+    const p = freeAgents[i];
+    const roll = Math.random() * 100;
+    if (roll <= chance) {
+      warriors.push({...p, trainedToday:false});
+      money -= 5;
+      alert(`${p.name} 成功加入勇士！`);
+      freeAgents.splice(i,1);
+    } else {
+      alert(`${p.name} 拒絕了你的邀請...`);
+    }
+    showFreeAgents(); showWarriors(); saveData();
+  };
+
+  function simulateGameAuto(todayStr){
+    let ourScore = 0, oppScore = 0;
+    let mvp = "", mvpScore = 0;
+    const oppTeamName = Object.keys(otherTeams)[Math.floor(Math.random()*5)];
+    const oppPlayers = otherTeams[oppTeamName];
+    warriors.forEach(p=>{
+      let base = ratingMap[p.rating] || 8;
+      let score = base + Math.floor(Math.random()*6);
+      ourScore += score;
+      if(score > mvpScore) { mvpScore = score; mvp = p.name; }
+    });
+    oppPlayers.forEach(p=>{
+      oppScore += (ratingMap[p.rating] || 8) + Math.floor(Math.random()*6);
+    });
+    lastSimDate = todayStr;
+    const res = document.getElementById("gameResult");
+    res.innerHTML = `<h2>模擬比賽結果 🏀</h2>
+      <p>勇士 vs ${oppTeamName}</p>
+      <p>比分：<strong>${ourScore} - ${oppScore}</strong></p>
+      <p>${ourScore>oppScore ? "🎉 勝利！" : "😢 落敗..."}</p>
+      <p>MVP：${mvp}（得分 ${mvpScore}）</p>`;
+    saveData();
+  }
+
+  function selectTeam() {
+    const area = document.getElementById("teamSelectArea");
+    area.innerHTML = `
+      <h2>選擇球隊</h2>
+      <select id="teamSelect">
+        <option value="">請選擇</option>
+        ${Object.keys(otherTeams).map(t => `<option value="${t}">${t}</option>`).join("")}
+      </select>`;
+    document.getElementById("teamSelect").addEventListener("change", e => {
+      const team = e.target.value;
+      if (!team) return;
+      const div = document.getElementById("otherTeam");
+      div.innerHTML = `<h3>${team} 陣容</h3>` + otherTeams[team].map(p => `
+        <div class="player"><div><strong>${p.name}</strong>｜評價：${p.rating} ${getStar(p.rating)}</div></div>
+      `).join("");
+    });
+  }
+
+  function resetTraining() {
+    warriors.forEach(p=>p.trainedToday = false);
+    alert("所有球員今日訓練已重置！");
+    showWarriors(); saveData();
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
-    // 🧭 資料初始化
-    let warriors, freeAgents, money, salaryCap, lastSimDate;
-    const ratingMap = ["C","C+","B-","B","B+","A-","A","A+","S","S+"];
-    const salaryValueMap = { "C":2,"C+":3,"B-":4,"B":5,"B+":6,"A-":7,"A":8,"A+":9,"S":10,"S+":12 };
+    loadData();
+    renderDate();
+    showWarriors();
+    showFreeAgents();
 
-    function load() {
-      const data = JSON.parse(localStorage.getItem("sj_gm_data")||"null");
-      if(data) {
-        ({ warriors, freeAgents, money, salaryCap, lastSimDate } = data);
-      } else {
-        money = 100;
-        salaryCap = 120;
-        lastSimDate = null;
-        warriors = [
-          { name:"Stephen Curry", rating:"S", trainedToday:false },
-          { name:"Klay Thompson", rating:"B+", trainedToday:false },
-          { name:"Draymond Green", rating:"B", trainedToday:false }
-        ];
-        freeAgents = [
-          { name:"Robert Covington", rating:"B-", signChance:50 },
-          { name:"Kelly Oubre Jr.", rating:"B", signChance:65 }
-        ];
-      }
-    }
-    function save() {
-      localStorage.setItem("sj_gm_data", JSON.stringify({ warriors, freeAgents, money, salaryCap, lastSimDate }));
-    }
-
-    function renderUI() {
-      const today = new Date().toLocaleDateString();
-      document.getElementById("dateDisplay").textContent = "今天：" + today;
-      document.getElementById("moneyDisplay").textContent = "$" + money;
-      document.getElementById("salaryCapDisplay").textContent = salaryCap;
-      document.getElementById("salaryUsedDisplay").textContent = warriors.reduce((s,p)=>s + (salaryValueMap[p.rating]||0),0);
-    }
-
-    function showWarriors() {
-      const t = document.getElementById("team");
-      t.innerHTML = "<h2>勇士陣容</h2>";
-      warriors.forEach((p,i)=>{
-        const div = document.createElement("div");
-        div.className = "player";
-        div.innerHTML = `
-          <div class="player-card">🏀</div>
-          <div><strong>${p.name}</strong><br>評價：${p.rating}</div>
-          <button data-i="${i}" ${p.trainedToday?"disabled":""}>訓練🔥</button>
-          <div class="stats">${p.trainedToday?"今天已訓練":"可訓練"}</div>
-        `;
-        t.appendChild(div);
-        div.querySelector("button").addEventListener("click",()=>{
-          if(money<5){ alert("資金不足！"); return; }
-          const idx = ratingMap.indexOf(p.rating);
-          if(idx<ratingMap.length-1){
-            p.rating = ratingMap[idx+1];
-            money -= 5;
-            p.trainedToday = true;
-            alert(`${p.name} 訓練完成，評價提升至 ${p.rating}`);
-            renderUI(); save(); showWarriors();
-          } else alert("已達最高評價！");
-        });
-      });
-    }
-
-    function showFreeAgents() {
-      const f = document.getElementById("freeAgents");
-      f.innerHTML = "<h2>自由市場</h2>";
-      const avg = warriors.reduce((s,p)=>s+ratingMap.indexOf(p.rating)+1,0)/warriors.length;
-      freeAgents.forEach((p,i)=>{
-        const chance = Math.min(95, p.signChance + Math.floor(avg));
-        const div = document.createElement("div");
-        div.className = "player";
-        div.innerHTML = `
-          <div><strong>${p.name}</strong><br>評價：${p.rating}<br>簽約機率 ${chance}%</div>
-          <button data-i="${i}">簽下</button>
-          <div class="stats">費用 10 元</div>
-        `;
-        f.appendChild(div);
-        div.querySelector("button").addEventListener("click",()=>{
-          if(money<10){ alert("資金不足！"); return; }
-          const salaryNeeded = salaryValueMap[p.rating]||0;
-          const used = warriors.reduce((s2,p2)=>s2 + (salaryValueMap[p2.rating]||0),0);
-          if(used+salaryNeeded>salaryCap){
-            alert("超過薪資上限！");
-            return;
-          }
-          if(Math.random()*100 <= chance){
-            money -= 10;
-            warriors.push({ name:p.name, rating:p.rating, trainedToday:false });
-            freeAgents.splice(i,1);
-            alert(`${p.name} 成功加入勇士！`);
-            renderUI(); save(); showWarriors(); showFreeAgents();
-          } else alert(`${p.name} 拒絕邀請！`);
-        });
-      });
-    }
-
-    function simulateGame() {
-      const today = new Date().toLocaleDateString();
-      if(lastSimDate === today){
-        alert("今天已模擬過。");
-        return;
-      }
-      const ratingScore = { "C":5,"C+":7,"B-":9,"B":10,"B+":12,"A-":14,"A":15,"A+":17,"S":18,"S+":20 };
-      let our=0, opp=0, mvp="", mvps=0;
-      warriors.forEach(p=>{
-        let score = ratingScore[p.rating] + Math.floor(Math.random()*6);
-        our += score;
-        if(score>mvps){ mvps=score; mvp=p.name; }
-      });
-      ["A","B+","B"].forEach(r=>{
-        opp += ratingScore[r] + Math.floor(Math.random()*6);
-      });
-      document.getElementById("gameResult").innerHTML = `
-        <h2>📆 ${today} 比賽結果</h2>
-        <p>比分：${our} - ${opp}</p>
-        <p>${our>opp?"🎉 勇士勝利!":"😢 勇士落敗..."}</p>
-        <p>MVP：${mvp} (${mvps} 分)</p>
-      `;
-      lastSimDate = today;
-      save();
-    }
-
-    function resetTraining(){
-      warriors.forEach(p=>p.trainedToday=false);
-      save();
-      alert("今日訓練已重置！");
-      showWarriors();
-    }
-
-    // 綁定按鈕
     document.getElementById("showWarriorsBtn").addEventListener("click", showWarriors);
     document.getElementById("showFreeAgentsBtn").addEventListener("click", showFreeAgents);
-    document.getElementById("simulateGameBtn").addEventListener("click", simulateGame);
+    document.getElementById("simulateGameBtn").addEventListener("click", renderDate);
+    document.getElementById("selectTeamBtn").addEventListener("click", selectTeam);
     document.getElementById("resetTrainingBtn").addEventListener("click", resetTraining);
-    document.getElementById("clearBtn").addEventListener("click",()=>{
-      if(confirm("清檔？")) localStorage.removeItem("sj_gm_data"), location.reload();
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if(confirm("確定要清空所有資料？")) {
+        localStorage.removeItem("sj_gm_data");
+        location.reload();
+      }
     });
-
-    // 初始載入
-    load(); renderUI(); showWarriors();
   });
-  </script>
+})();
+</script>
 </body>
 </html>
