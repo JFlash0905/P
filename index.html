@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>Sniper J GM 模擬器 v0.5.2</title>
+  <title>Sniper J GM 模擬器 v0.6</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f2f2f2; }
     h1 { color: #2c3e50; }
@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <h1>🏀 Sniper J GM 模擬器 v0.5.2</h1>
+  <h1>🏀 Sniper J GM 模擬器 v0.6</h1>
 
   <div class="section">
     <button id="showWarriorsBtn">顯示勇士隊球員</button>
@@ -32,7 +32,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const warriors = [
+  const warriors = [
     { name: "Stephen Curry", rating: "S", trained: false },
     { name: "Klay Thompson", rating: "B+", trained: false },
     { name: "Draymond Green", rating: "B", trained: false },
@@ -92,7 +92,8 @@ document.addEventListener("DOMContentLoaded", () => {
     alert("訓練日已重置，全部球員可再次訓練！");
     showWarriors();
   }
-    function showWarriors() {
+
+  function showWarriors() {
     const container = document.getElementById("team");
     container.innerHTML = "<h2>勇士隊陣容</h2>";
     warriors.forEach((player, index) => {
@@ -254,10 +255,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 綁定按鈕
-  window.onload = () => {
-    document.getElementById("showWarriorsBtn").addEventListener("click", showWarriors);
-    document.getElementById("showFreeAgentsBtn").addEventListener("click", showFreeAgents);
-    document.getElementById("selectTeamBtn").addEventListener("click", selectTeam);
-    document.getElementById("simulateGameBtn").addEventListener("click", simulateGame);
-    document.getElementById("resetTrainingBtn").addEventListener("click", resetTraining);
-  };
+  document.getElementById("showWarriorsBtn").addEventListener("click", showWarriors);
+  document.getElementById("showFreeAgentsBtn").addEventListener("click", showFreeAgents);
+  document.getElementById("selectTeamBtn").addEventListener("click", selectTeam);
+  document.getElementById("simulateGameBtn").addEventListener("click", simulateGame);
+  document.getElementById("resetTrainingBtn").addEventListener("click", resetTraining);
+});
+</script>
+</body>
+</html>
