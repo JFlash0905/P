@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>Sniper J GM 模擬器 v0.7.5</title>
+  <title>Sniper J GM 模擬器 v0.7.6</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f2f2f2; }
     h1 { color: #2c3e50; }
@@ -19,7 +19,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>🏀 Sniper J GM 模擬器 v0.7.5</h1>
+    <h1>🏀 Sniper J GM 模擬器 v0.7.6</h1>
     <div>
       <button id="clearBtn">清空存檔</button>
       <span id="dateDisplay"></span>
@@ -38,10 +38,11 @@
     <div id="otherTeam"></div>
     <div id="gameResult"></div>
   </div>
-  <script>
+
+<script>
 (() => {
   const ratingMap = { "C":1, "C+":2, "B-":3, "B":4, "B+":5, "A-":6, "A":7, "A+":8, "S":9, "S+":10 };
-  const ratingStars = r => "★".repeat(Math.min(5, Math.round((ratingMap[r] || 1) / 2)));
+  const ratingStars = (r) => "★".repeat(Math.min(5, Math.round((ratingMap[r] || 1) / 2)));
 
   let warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate, picks;
 
@@ -65,6 +66,11 @@
           { name:"Jalen Williams", rating:"A", salary:20 },
           { name:"Chet Holmgren", rating:"A-", salary:18 }
         ],
+        "灰狼": [
+          { name:"Anthony Edwards", rating:"S", salary:32 },
+          { name:"Karl-Anthony Towns", rating:"A", salary:28 },
+          { name:"Rudy Gobert", rating:"B+", salary:25 }
+        ],
         "金塊": [
           { name:"Nikola Jokic", rating:"S+", salary:38 },
           { name:"Jamal Murray", rating:"A", salary:27 },
@@ -74,16 +80,19 @@
       money: 100,
       salaryCap: 120,
       lastSimDate: null,
-      picks: 2
+      picks: 1
     };
   }
 
   function loadData() {
     try {
       const saved = JSON.parse(localStorage.getItem("sj_gm_data") || "null");
-      if (saved) {
+      if (saved && saved.warriors && saved.freeAgents && saved.otherTeams) {
         ({ warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate, picks } = saved);
-      } else throw new Error();
+        if (picks === undefined) picks = 1;
+      } else {
+        throw new Error("重建資料");
+      }
     } catch {
       ({ warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate, picks } = defaultData());
       saveData();
@@ -94,18 +103,18 @@
     localStorage.setItem("sj_gm_data", JSON.stringify({ warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate, picks }));
   }
 
+  function renderDate() {
+    const now = new Date().toLocaleDateString();
+    const teamSalary = getTeamSalary();
+    const capWarning = teamSalary > salaryCap ? " ⚠️" : "";
+    document.getElementById("dateDisplay").textContent = "｜今天：" + now;
+    document.getElementById("moneyDisplay").textContent = `｜資金：$${money}M｜團隊工資：${teamSalary}M / 上限：${salaryCap}M${capWarning}｜首輪籤：${picks}`;
+  }
+
   function getTeamSalary() {
     return warriors.reduce((sum, p) => sum + (p.salary || 0), 0);
   }
-
-  function renderDate() {
-    const salary = getTeamSalary();
-    const warn = salary > salaryCap ? "⚠️" : "";
-    document.getElementById("dateDisplay").textContent = "｜今天：" + new Date().toLocaleDateString();
-    document.getElementById("moneyDisplay").textContent = `｜資金：$${money}M｜團隊工資：${salary}M / 上限：${salaryCap}M ${warn}｜首輪籤：${picks}`;
-  }
-
-  function showWarriors() {
+    function showWarriors() {
     const container = document.getElementById("team");
     container.innerHTML = "<h2>勇士隊陣容</h2>";
     warriors.forEach((p, i) => {
@@ -128,22 +137,26 @@
   window.trainPlayer = function(index) {
     const p = warriors[index];
     if (!p.trainedToday && ratingMap[p.rating] < 10) {
-      const next = Object.keys(ratingMap)[Object.values(ratingMap).indexOf(ratingMap[p.rating] + 1)];
-      p.rating = next;
+      const nextRating = Object.keys(ratingMap)[Object.values(ratingMap).indexOf(ratingMap[p.rating] + 1)];
+      p.rating = nextRating;
       p.trainedToday = true;
-      alert(`${p.name} 提升至 ${p.rating}！`);
+      alert(`${p.name} 評價提升為 ${p.rating}！`);
     } else {
-      alert("已訓練或已達頂級！");
+      alert("已訓練過或已達頂級！");
     }
-    saveData(); showWarriors();
+    saveData();
+    showWarriors();
+    renderDate();
   }
 
   window.releasePlayer = function(index) {
     const p = warriors[index];
-    if (confirm(`確定要釋出 ${p.name}？此操作不可回復！`)) {
+    if (confirm(`是否釋出 ${p.name}？`)) {
       warriors.splice(index, 1);
       alert(`${p.name} 已被釋出。`);
-      saveData(); showWarriors(); renderDate();
+      saveData();
+      showWarriors();
+      renderDate();
     }
   }
 
@@ -175,8 +188,13 @@
       freeAgents.splice(index, 1);
       money -= p.salary;
       alert(`${p.name} 成功加入！`);
-    } else alert(`${p.name} 拒絕加盟...`);
-    saveData(); renderDate(); showFreeAgents(); showWarriors();
+    } else {
+      alert(`${p.name} 拒絕加入...`);
+    }
+    saveData();
+    renderDate();
+    showFreeAgents();
+    showWarriors();
   }
 
   function selectTeam() {
@@ -184,7 +202,7 @@
     area.innerHTML = `<h3>選擇球隊：</h3><select id="teamSelect"><option value="">請選擇</option>
       ${Object.keys(otherTeams).map(t => `<option value="${t}">${t}</option>`).join("")}
     </select>`;
-    document.getElementById("teamSelect").onchange = e => showOtherTeam(e.target.value);
+    document.getElementById("teamSelect").onchange = (e) => showOtherTeam(e.target.value);
   }
 
   function showOtherTeam(team) {
@@ -198,69 +216,100 @@
         <div class="player-info">
           <strong>${p.name}</strong>｜${p.rating}｜${ratingStars(p.rating)}<br/>💰 ${p.salary}M
         </div>
-        <div><button onclick="multiTrade('${team}', ${i})">多換一交易</button></div>`;
+        <div><button onclick="tradeFor('${team}', ${i})">交易</button></div>`;
       container.appendChild(div);
     });
   }
-
-  window.multiTrade = function(team, index) {
+    window.tradeFor = function(team, index) {
     const target = otherTeams[team][index];
-    let promptMsg = `你想用哪些勇士球員交易 ${target.name}？（最多3人，用,分隔名字）\n`;
-    warriors.forEach(p => promptMsg += `- ${p.name}\n`);
-    promptMsg += `你還可以打「首輪籤」加入交易`;
-    const input = prompt(promptMsg);
-    if (!input) return;
-    const items = input.split(",").map(s => s.trim());
-    const usePick = items.includes("首輪籤");
-    const selected = warriors.filter(p => items.includes(p.name));
-    if (selected.length === 0 && !usePick) return alert("沒有有效交易項目");
+    const options = warriors.map((p, idx) => `${idx + 1}. ${p.name}`).join('\n');
+    const input = prompt(`輸入想交易的球員編號（可用逗號分隔多位，例如 1,3）：\n${options}\n\n是否加送首輪籤？輸入 yes 加送`);
 
-    const giveSalary = selected.reduce((sum, p) => sum + p.salary, 0);
-    const total = giveSalary + (usePick ? 5 : 0); // pick值約等於5M
-    if (total >= target.salary) {
-      selected.forEach(p => {
-        const i = warriors.findIndex(x => x.name === p.name);
-        if (i !== -1) warriors.splice(i, 1);
-      });
-      if (usePick && picks > 0) picks--;
-      warriors.push({ ...target, trainedToday: false });
-      otherTeams[team].splice(index, 1);
-      alert(`交易成功！你獲得了 ${target.name}`);
-    } else {
-      alert("你提供的籌碼不夠有誠意！");
+    if (!input) return;
+
+    const parts = input.split(",");
+    const givePicks = parts.some(p => p.trim().toLowerCase() === "yes");
+    const indices = parts.filter(p => !isNaN(parseInt(p))).map(p => parseInt(p) - 1).filter(i => warriors[i]);
+
+    if (indices.length === 0) return alert("沒有選擇有效球員！");
+    const totalSalary = indices.reduce((sum, i) => sum + warriors[i].salary, 0);
+    const targetSalary = target.salary;
+
+    const taxOver = getTeamSalary() - salaryCap;
+    const taxPenalty = taxOver > 0 ? Math.floor(taxOver * 0.1) : 0;
+
+    if (totalSalary < targetSalary && !givePicks) {
+      return alert("交易失敗：你給的球員價值不夠，考慮加上首輪籤！");
     }
-    saveData(); showWarriors(); showOtherTeam(team); renderDate();
+
+    const tradedPlayers = indices.map(i => warriors[i]);
+    warriors = warriors.filter((_, i) => !indices.includes(i));
+    warriors.push({ ...target, trainedToday: false });
+
+    // 對方球隊更新：加入被交易來的球員
+    otherTeams[team][index] = tradedPlayers[0];
+    if (tradedPlayers.length > 1) {
+      otherTeams[team].push(...tradedPlayers.slice(1));
+    }
+
+    if (givePicks) {
+      alert(`交易成功！你用 ${tradedPlayers.map(p => p.name).join("、")} + 首輪籤 換來了 ${target.name}！`);
+    } else {
+      alert(`交易成功！你用 ${tradedPlayers.map(p => p.name).join("、")} 換來了 ${target.name}！`);
+    }
+
+    // 資金微調：支付豪華稅
+    if (taxPenalty > 0) {
+      money -= taxPenalty;
+      alert(`你觸發了豪華稅，扣除 $${taxPenalty}M！`);
+    }
+
+    saveData();
+    showWarriors();
+    showOtherTeam(team);
+    renderDate();
   }
 
   function simulateGame() {
     const today = new Date().toLocaleDateString();
     if (lastSimDate === today) return alert("今天已模擬過一場比賽！");
-    const score = warriors.reduce((sum, p) => sum + ratingMap[p.rating] + Math.floor(Math.random() * 5), 0);
-    const [oppName, oppTeam] = Object.entries(otherTeams)[Math.floor(Math.random() * Object.keys(otherTeams).length)];
-    const oppScore = oppTeam.reduce((sum, p) => sum + ratingMap[p.rating] + Math.floor(Math.random() * 5), 0);
-    document.getElementById("gameResult").innerHTML = `<h2>比賽結果</h2>
-      <p>勇士 vs ${oppName}</p><p>比分：${score} - ${oppScore}</p>
-      <p>${score > oppScore ? "🎉 勝利！" : "💔 落敗..."}</p>`;
+
+    const score = warriors.reduce((sum, p) => sum + ratingMap[p.rating] + Math.floor(Math.random() * 4), 0);
+    const [teamName, players] = Object.entries(otherTeams)[Math.floor(Math.random() * Object.keys(otherTeams).length)];
+    const oppScore = players.reduce((sum, p) => sum + ratingMap[p.rating] + Math.floor(Math.random() * 4), 0);
+
+    const result = document.getElementById("gameResult");
+    result.innerHTML = `<h2>模擬比賽結果</h2>
+      <p>勇士 vs ${teamName}</p>
+      <p>比分：${score} - ${oppScore}</p>
+      <p>${score > oppScore ? "🎉 勇士勝利！" : "😢 勇士落敗..."}</p>`;
+
     lastSimDate = today;
-    saveData(); renderDate();
+    saveData();
+    renderDate();
   }
 
   function resetTraining() {
     warriors.forEach(p => p.trainedToday = false);
     alert("訓練已重置！");
-    saveData(); showWarriors();
+    saveData();
+    showWarriors();
   }
 
+  // 初始化
   document.addEventListener("DOMContentLoaded", () => {
-    loadData(); renderDate(); showWarriors();
+    loadData();
+    renderDate();
+    showWarriors();
     document.getElementById("showWarriorsBtn").onclick = showWarriors;
     document.getElementById("showFreeAgentsBtn").onclick = showFreeAgents;
     document.getElementById("selectTeamBtn").onclick = selectTeam;
     document.getElementById("simulateGameBtn").onclick = simulateGame;
     document.getElementById("resetTrainingBtn").onclick = resetTraining;
     document.getElementById("clearBtn").onclick = () => {
-      if (confirm("清除所有進度？")) {
-        localStorage.removeItem("sj_gm_data"); location.reload();
+      if (confirm("確定要清空所有資料嗎？")) {
+        localStorage.removeItem("sj_gm_data");
+        location.reload();
       }
     };
   });
