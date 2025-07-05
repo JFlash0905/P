@@ -17,11 +17,11 @@
   <h1>🏀 Sniper J GM 模擬器 v0.5</h1>
 
   <div class="section">
-    <button id="showWarriorsBtn">顯示勇士隊球員</button>
-    <button id="showFreeAgentsBtn">自由市場</button>
-    <button id="selectTeamBtn">查看其他隊伍</button>
-    <button id="simulateGameBtn">模擬比賽</button>
-    <button id="resetTrainingBtn">重置訓練日</button>
+    <button onclick="showWarriors()">顯示勇士隊球員</button>
+    <button onclick="showFreeAgents()">自由市場</button>
+    <button onclick="selectTeam()">查看其他隊伍</button>
+    <button onclick="simulateGame()">模擬比賽</button>
+    <button onclick="resetTraining()">重置訓練日</button>
     <div id="teamSelectArea"></div>
   </div>
 
@@ -173,7 +173,6 @@
           ${Object.keys(otherTeams).map(t => `<option value="${t}">${t}</option>`).join("")}
         </select>
       `;
-
       document.getElementById("teamSelect").addEventListener("change", e => {
         showOtherTeam(e.target.value);
       });
@@ -182,8 +181,9 @@
     function showOtherTeam(teamName) {
       if (!teamName) return;
       const container = document.getElementById("otherTeam");
-      const players = otherTeams[teamName];
       container.innerHTML = `<h2>${teamName} 球員</h2>`;
+      const players = otherTeams[teamName];
+
       players.forEach((player, index) => {
         const div = document.createElement("div");
         div.className = "player";
@@ -250,21 +250,6 @@
         <p>MVP：${mvp}（得分 ${mvpScore}）</p>
       `;
     }
-
-    // 啟動按鈕綁定與每日自動流程
-    document.getElementById("showWarriorsBtn").addEventListener("click", showWarriors);
-    document.getElementById("showFreeAgentsBtn").addEventListener("click", showFreeAgents);
-    document.getElementById("selectTeamBtn").addEventListener("click", selectTeam);
-    document.getElementById("simulateGameBtn").addEventListener("click", simulateGame);
-    document.getElementById("resetTrainingBtn").addEventListener("click", resetTraining);
-
-    // 自動重置訓練日，每 60 秒代表新的一天
-    setInterval(() => {
-      warriors.forEach(p => p.trained = false);
-      console.log("🌅 新的一天開始，訓練日自動重置！");
-    }, 60000);
-
-    showWarriors(); // 預設畫面
   </script>
 </body>
 </html>
