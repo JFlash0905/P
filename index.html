@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>Sniper J GM 模擬器 v0.5</title>
+  <title>Sniper J GM 模擬器 v0.5.2</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f2f2f2; }
     h1 { color: #2c3e50; }
@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <h1>🏀 Sniper J GM 模擬器 v0.5</h1>
+  <h1>🏀 Sniper J GM 模擬器 v0.5.2</h1>
 
   <div class="section">
     <button id="showWarriorsBtn">顯示勇士隊球員</button>
@@ -30,219 +30,234 @@
   <div id="otherTeam"></div>
   <div id="gameResult"></div>
 
-  <script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
     const warriors = [
-      { name: "Stephen Curry", rating: "S", trained: false },
-      { name: "Klay Thompson", rating: "B+", trained: false },
-      { name: "Draymond Green", rating: "B", trained: false },
-      { name: "Jonathan Kuminga", rating: "B", trained: false },
-      { name: "Andrew Wiggins", rating: "B+", trained: false },
-      { name: "Moses Moody", rating: "C+", trained: false }
-    ];
+    { name: "Stephen Curry", rating: "S", trained: false },
+    { name: "Klay Thompson", rating: "B+", trained: false },
+    { name: "Draymond Green", rating: "B", trained: false },
+    { name: "Jonathan Kuminga", rating: "B", trained: false },
+    { name: "Andrew Wiggins", rating: "B+", trained: false },
+    { name: "Moses Moody", rating: "C+", trained: false }
+  ];
 
-    const freeAgents = [
-      { name: "Malik Beasley", rating: "B", signChance: 60 },
-      { name: "Robert Covington", rating: "B-", signChance: 50 },
-      { name: "Will Barton", rating: "C+", signChance: 80 },
-      { name: "Kelly Oubre Jr.", rating: "B", signChance: 70 }
-    ];
+  const freeAgents = [
+    { name: "Malik Beasley", rating: "B", signChance: 60 },
+    { name: "Robert Covington", rating: "B-", signChance: 50 },
+    { name: "Will Barton", rating: "C+", signChance: 80 },
+    { name: "Kelly Oubre Jr.", rating: "B", signChance: 70 }
+  ];
 
-    const otherTeams = {
-      "雷霆": [
-        { name: "Shai Gilgeous-Alexander", rating: "S" },
-        { name: "Jalen Williams", rating: "A" },
-        { name: "Chet Holmgren", rating: "A-" }
-      ],
-      "灰狼": [
-        { name: "Anthony Edwards", rating: "S" },
-        { name: "Rudy Gobert", rating: "B+" },
-        { name: "Karl-Anthony Towns", rating: "A" }
-      ],
-      "金塊": [
-        { name: "Nikola Jokic", rating: "S+" },
-        { name: "Jamal Murray", rating: "A" },
-        { name: "Aaron Gordon", rating: "B+" }
-      ]
-    };
+  const otherTeams = {
+    "雷霆": [
+      { name: "Shai Gilgeous-Alexander", rating: "S" },
+      { name: "Jalen Williams", rating: "A" },
+      { name: "Chet Holmgren", rating: "A-" }
+    ],
+    "灰狼": [
+      { name: "Anthony Edwards", rating: "S" },
+      { name: "Rudy Gobert", rating: "B+" },
+      { name: "Karl-Anthony Towns", rating: "A" }
+    ],
+    "金塊": [
+      { name: "Nikola Jokic", rating: "S+" },
+      { name: "Jamal Murray", rating: "A" },
+      { name: "Aaron Gordon", rating: "B+" }
+    ],
+    "灰熊": [
+      { name: "Ja Morant", rating: "S" },
+      { name: "Jaren Jackson Jr.", rating: "A" },
+      { name: "Desmond Bane", rating: "A-" }
+    ],
+    "熱火": [
+      { name: "Bam Adebayo", rating: "A+" },
+      { name: "Tyler Herro", rating: "A-" },
+      { name: "Jaime Jaquez Jr.", rating: "B+" }
+    ]
+  };
 
-    const ratingMap = { "C": 1, "C+": 2, "B-": 3, "B": 4, "B+": 5, "A-": 6, "A": 7, "A+": 8, "S": 9, "S+": 10 };
+  const ratingMap = {
+    "C": 1, "C+": 2, "B-": 3, "B": 4, "B+": 5,
+    "A-": 6, "A": 7, "A+": 8, "S": 9, "S+": 10
+  };
 
-    function getAverageRating() {
-      let total = 0;
-      warriors.forEach(p => total += ratingMap[p.rating] || 1);
-      return total / warriors.length;
-    }
+  function getAverageRating() {
+    let total = 0;
+    warriors.forEach(p => total += ratingMap[p.rating] || 1);
+    return total / warriors.length;
+  }
 
+  function resetTraining() {
+    warriors.forEach(p => p.trained = false);
+    alert("訓練日已重置，全部球員可再次訓練！");
+    showWarriors();
+  }
     function showWarriors() {
-      const container = document.getElementById("team");
-      container.innerHTML = "<h2>勇士隊陣容</h2>";
-      warriors.forEach((player, index) => {
-        const trainedClass = player.trained ? 'disabled' : '';
-        const trainedText = player.trained ? '（已訓練）' : '';
-        const div = document.createElement("div");
-        div.className = "player";
-        div.innerHTML = `
-          <strong>${player.name}</strong> - 評價：${player.rating} ${trainedText}<br />
-          <button class="trainBtn ${trainedClass}" data-index="${index}">訓練</button>
-          <button class="tradeBtn" data-index="${index}">交易他隊球員</button>
-        `;
-        container.appendChild(div);
-      });
+    const container = document.getElementById("team");
+    container.innerHTML = "<h2>勇士隊陣容</h2>";
+    warriors.forEach((player, index) => {
+      const trainedClass = player.trained ? 'disabled' : '';
+      const trainedText = player.trained ? '（已訓練）' : '';
+      const div = document.createElement("div");
+      div.className = "player";
+      div.innerHTML = `
+        <strong>${player.name}</strong> - 評價：${player.rating} ${trainedText}<br />
+        <button class="trainBtn ${trainedClass}" data-index="${index}">訓練</button>
+        <button class="tradeBtn" data-index="${index}">交易他隊球員</button>
+      `;
+      container.appendChild(div);
+    });
 
-      document.querySelectorAll(".trainBtn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const idx = parseInt(btn.dataset.index);
-          if (!warriors[idx].trained) {
-            const ratings = Object.keys(ratingMap);
-            const current = warriors[idx].rating;
-            let curIdx = ratings.indexOf(current);
-            if (curIdx < ratings.length - 1) {
-              warriors[idx].rating = ratings[curIdx + 1];
-              warriors[idx].trained = true;
-              alert(`${warriors[idx].name} 訓練成功！評價升為 ${warriors[idx].rating}`);
-            } else {
-              alert(`${warriors[idx].name} 已達最高評價！`);
-            }
-            showWarriors();
-          }
-        });
-      });
-
-      document.querySelectorAll(".tradeBtn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          alert("請用『查看其他隊伍』後點選『發起交易』進行操作！");
-        });
-      });
-    }
-
-    function showFreeAgents() {
-      const container = document.getElementById("freeAgents");
-      container.innerHTML = "<h2>可簽自由球員</h2>";
-      const avgRating = getAverageRating();
-      freeAgents.forEach((player, index) => {
-        const chance = Math.min(95, player.signChance + Math.floor(avgRating));
-        const div = document.createElement("div");
-        div.className = "player";
-        div.innerHTML = `
-          <strong>${player.name}</strong> - 評價：${player.rating}（簽約機率：約 ${chance}%）<br />
-          <button class="signBtn" data-index="${index}" data-chance="${chance}">簽下</button>
-        `;
-        container.appendChild(div);
-      });
-
-      document.querySelectorAll(".signBtn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const i = parseInt(btn.dataset.index);
-          const chance = parseInt(btn.dataset.chance);
-          const rand = Math.random() * 100;
-          if (rand <= chance) {
-            warriors.push({ ...freeAgents[i], trained: false });
-            alert(`${freeAgents[i].name} 成功加入勇士！`);
-            freeAgents.splice(i, 1);
+    document.querySelectorAll(".trainBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.index);
+        if (!warriors[idx].trained) {
+          const ratings = Object.keys(ratingMap);
+          const current = warriors[idx].rating;
+          let curIdx = ratings.indexOf(current);
+          if (curIdx < ratings.length - 1) {
+            warriors[idx].rating = ratings[curIdx + 1];
+            warriors[idx].trained = true;
+            alert(`${warriors[idx].name} 訓練成功！評價升為 ${warriors[idx].rating}`);
           } else {
-            alert(`${freeAgents[i].name} 拒絕加入你的球隊...`);
+            alert(`${warriors[idx].name} 已達最高評價！`);
           }
           showWarriors();
-          showFreeAgents();
-        });
-      });
-    }
-
-    function selectTeam() {
-      const area = document.getElementById("teamSelectArea");
-      area.innerHTML = `
-        <h2>選擇一支球隊：</h2>
-        <select id="teamSelect">
-          <option value="">請選擇</option>
-          ${Object.keys(otherTeams).map(t => `<option value="${t}">${t}</option>`).join("")}
-        </select>
-      `;
-
-      document.getElementById("teamSelect").addEventListener("change", e => {
-        showOtherTeam(e.target.value);
-      });
-    }
-
-    function showOtherTeam(teamName) {
-      if (!teamName) return;
-      const container = document.getElementById("otherTeam");
-      const players = otherTeams[teamName];
-      container.innerHTML = `<h2>${teamName} 球員</h2>`;
-      players.forEach((player, index) => {
-        const div = document.createElement("div");
-        div.className = "player";
-        div.innerHTML = `
-          <strong>${player.name}</strong> - 評價：${player.rating}<br />
-          <button class="tradeForBtn" data-team="${teamName}" data-index="${index}">發起交易</button>
-        `;
-        container.appendChild(div);
-      });
-
-      document.querySelectorAll(".tradeForBtn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const team = btn.dataset.team;
-          const index = parseInt(btn.dataset.index);
-          const otherPlayer = otherTeams[team][index];
-          const names = warriors.map(w => w.name).join("\n");
-          const input = prompt(`你要用哪位勇士球員換 ${otherPlayer.name}？\n請輸入名稱：\n${names}`);
-          const warriorIndex = warriors.findIndex(p => p.name === input);
-          if (warriorIndex >= 0) {
-            const traded = warriors[warriorIndex];
-            warriors[warriorIndex] = otherPlayer;
-            otherTeams[team][index] = traded;
-            alert(`交易成功！你用 ${traded.name} 換來了 ${otherPlayer.name}！`);
-            showWarriors();
-            showOtherTeam(team);
-          } else {
-            alert("找不到該球員，請輸入正確名稱！");
-          }
-        });
-      });
-    }
-
-    function simulateGame() {
-      const ratingToScore = {
-        "C": 5, "C+": 7, "B-": 9, "B": 10, "B+": 12,
-        "A-": 14, "A": 15, "A+": 17, "S": 18, "S+": 20
-      };
-      const teams = Object.keys(otherTeams);
-      const opponent = teams[Math.floor(Math.random() * teams.length)];
-      const oppPlayers = otherTeams[opponent];
-
-      let ourScore = 0, oppScore = 0, mvp = "", mvpScore = 0;
-
-      warriors.forEach(p => {
-        const base = ratingToScore[p.rating] || 8;
-        const perf = base + Math.floor(Math.random() * 6);
-        ourScore += perf;
-        if (perf > mvpScore) {
-          mvp = p.name;
-          mvpScore = perf;
         }
       });
+    });
 
-      oppPlayers.forEach(p => {
-        const base = ratingToScore[p.rating] || 8;
-        oppScore += base + Math.floor(Math.random() * 6);
+    document.querySelectorAll(".tradeBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        alert("請用『查看其他隊伍』後點選『發起交易』進行操作！");
       });
+    });
+  }
 
-      const result = document.getElementById("gameResult");
-      result.innerHTML = `<h2>模擬比賽結果 🏀</h2>
-        <p>你 vs ${opponent}</p>
-        <p>比分：<strong>${ourScore} - ${oppScore}</strong></p>
-        <p>${ourScore > oppScore ? "🎉 勇士勝利！" : "😢 勇士落敗..."}</p>
-        <p>MVP：${mvp}（得分 ${mvpScore}）</p>
+  function showFreeAgents() {
+    const container = document.getElementById("freeAgents");
+    container.innerHTML = "<h2>可簽自由球員</h2>";
+    const avgRating = getAverageRating();
+    freeAgents.forEach((player, index) => {
+      const chance = Math.min(95, player.signChance + Math.floor(avgRating));
+      const div = document.createElement("div");
+      div.className = "player";
+      div.innerHTML = `
+        <strong>${player.name}</strong> - 評價：${player.rating}（簽約機率：約 ${chance}%）<br />
+        <button class="signBtn" data-index="${index}" data-chance="${chance}">簽下</button>
       `;
-    }
+      container.appendChild(div);
+    });
 
-    // 綁定按鈕事件
-    window.onload = () => {
-      document.getElementById("showWarriorsBtn").addEventListener("click", showWarriors);
-      document.getElementById("showFreeAgentsBtn").addEventListener("click", showFreeAgents);
-      document.getElementById("selectTeamBtn").addEventListener("click", selectTeam);
-      document.getElementById("simulateGameBtn").addEventListener("click", simulateGame);
-      document.getElementById("resetTrainingBtn").addEventListener("click", resetTraining);
+    document.querySelectorAll(".signBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.dataset.index);
+        const chance = parseInt(btn.dataset.chance);
+        const rand = Math.random() * 100;
+        if (rand <= chance) {
+          warriors.push({ ...freeAgents[i], trained: false });
+          alert(`${freeAgents[i].name} 成功加入勇士！`);
+          freeAgents.splice(i, 1);
+        } else {
+          alert(`${freeAgents[i].name} 拒絕加入你的球隊...`);
+        }
+        showWarriors();
+        showFreeAgents();
+      });
+    });
+  }
+
+  function selectTeam() {
+    const area = document.getElementById("teamSelectArea");
+    area.innerHTML = `
+      <h2>選擇一支球隊：</h2>
+      <select id="teamSelect">
+        <option value="">請選擇</option>
+        ${Object.keys(otherTeams).map(t => `<option value="${t}">${t}</option>`).join("")}
+      </select>
+    `;
+    document.getElementById("teamSelect").addEventListener("change", e => {
+      showOtherTeam(e.target.value);
+    });
+  }
+
+  function showOtherTeam(teamName) {
+    if (!teamName) return;
+    const container = document.getElementById("otherTeam");
+    const players = otherTeams[teamName];
+    container.innerHTML = `<h2>${teamName} 球員</h2>`;
+    players.forEach((player, index) => {
+      const div = document.createElement("div");
+      div.className = "player";
+      div.innerHTML = `
+        <strong>${player.name}</strong> - 評價：${player.rating}<br />
+        <button class="tradeForBtn" data-team="${teamName}" data-index="${index}">發起交易</button>
+      `;
+      container.appendChild(div);
+    });
+
+    document.querySelectorAll(".tradeForBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const team = btn.dataset.team;
+        const index = parseInt(btn.dataset.index);
+        const otherPlayer = otherTeams[team][index];
+        const names = warriors.map(w => w.name).join("\n");
+        const input = prompt(`你要用哪位勇士球員換 ${otherPlayer.name}？\n請輸入名稱：\n${names}`);
+        const warriorIndex = warriors.findIndex(p => p.name === input);
+        if (warriorIndex >= 0) {
+          const traded = warriors[warriorIndex];
+          warriors[warriorIndex] = otherPlayer;
+          otherTeams[team][index] = traded;
+          alert(`交易成功！你用 ${traded.name} 換來了 ${otherPlayer.name}！`);
+          showWarriors();
+          showOtherTeam(team);
+        } else {
+          alert("找不到該球員，請輸入正確名稱！");
+        }
+      });
+    });
+  }
+
+  function simulateGame() {
+    const ratingToScore = {
+      "C": 5, "C+": 7, "B-": 9, "B": 10, "B+": 12,
+      "A-": 14, "A": 15, "A+": 17, "S": 18, "S+": 20
     };
-  </script>
-</body>
-</html>
+    const teams = Object.keys(otherTeams);
+    const opponent = teams[Math.floor(Math.random() * teams.length)];
+    const oppPlayers = otherTeams[opponent];
+
+    let ourScore = 0, oppScore = 0, mvp = "", mvpScore = 0;
+
+    warriors.forEach(p => {
+      const base = ratingToScore[p.rating] || 8;
+      const perf = base + Math.floor(Math.random() * 6);
+      ourScore += perf;
+      if (perf > mvpScore) {
+        mvp = p.name;
+        mvpScore = perf;
+      }
+    });
+
+    oppPlayers.forEach(p => {
+      const base = ratingToScore[p.rating] || 8;
+      oppScore += base + Math.floor(Math.random() * 6);
+    });
+
+    const result = document.getElementById("gameResult");
+    result.innerHTML = `<h2>模擬比賽結果 🏀</h2>
+      <p>你 vs ${opponent}</p>
+      <p>比分：<strong>${ourScore} - ${oppScore}</strong></p>
+      <p>${ourScore > oppScore ? "🎉 勇士勝利！" : "😢 勇士落敗..."}</p>
+      <p>MVP：${mvp}（得分 ${mvpScore}）</p>
+    `;
+  }
+
+  // 綁定按鈕
+  window.onload = () => {
+    document.getElementById("showWarriorsBtn").addEventListener("click", showWarriors);
+    document.getElementById("showFreeAgentsBtn").addEventListener("click", showFreeAgents);
+    document.getElementById("selectTeamBtn").addEventListener("click", selectTeam);
+    document.getElementById("simulateGameBtn").addEventListener("click", simulateGame);
+    document.getElementById("resetTrainingBtn").addEventListener("click", resetTraining);
+  };
