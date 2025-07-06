@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>Sniper J GM 模擬器 v0.8.1 Final</title>
+  <title>Sniper J GM 模擬器 v0.8.2</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f2f2f2; }
     h1 { color: #2c3e50; }
@@ -11,13 +11,17 @@
     .player-info { flex-grow: 1; }
     .section { margin-top: 30px; }
     select { padding: 5px 10px; margin-top: 10px; }
+    .disabled { opacity: 0.5; pointer-events: none; }
     .container { max-width: 900px; margin: auto; }
     .stars { font-size: 14px; color: gold; }
+    .stats { font-size: 12px; color: #555; text-align: right; }
+    .checkbox-list { max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #fff; border-radius: 4px; }
+    .checkbox-item { margin: 5px 0; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🏀 Sniper J GM 模擬器 v0.8.1 Final</h1>
+    <h1>🏀 Sniper J GM 模擬器 v0.8.2</h1>
     <div>
       <button id="clearBtn">清空存檔</button>
       <span id="dateDisplay"></span>
@@ -36,11 +40,10 @@
     <div id="otherTeam"></div>
     <div id="gameResult"></div>
   </div>
-
-<script>
-(() => {
+  <script>
+  (() => {
   const ratingMap = { "C":1, "C+":2, "B-":3, "B":4, "B+":5, "A-":6, "A":7, "A+":8, "S":9, "S+":10 };
-  const ratingStars = r => "★".repeat(Math.min(5, Math.round((ratingMap[r] || 1) / 2)));
+  const ratingStars = (r) => "★".repeat(Math.min(5, Math.round((ratingMap[r] || 1) / 2)));
 
   let warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate, firstRoundPicks;
 
@@ -112,8 +115,7 @@
   function getTeamSalary() {
     return warriors.reduce((sum, p) => sum + (p.salary || 0), 0);
   }
-
-  function showWarriors() {
+    function showWarriors() {
     const container = document.getElementById("team");
     container.innerHTML = "<h2>勇士隊陣容</h2>";
     warriors.forEach((p, i) => {
@@ -145,6 +147,13 @@
     saveData();
     showWarriors();
   };
+
+  function resetTraining() {
+    warriors.forEach(p => p.trainedToday = false);
+    alert("訓練已重置！");
+    saveData();
+    showWarriors();
+  }
 
   function showFreeAgents() {
     const container = document.getElementById("freeAgents");
@@ -182,8 +191,7 @@
     showFreeAgents();
     showWarriors();
   };
-
-  function selectTeam() {
+    function selectTeam() {
     const area = document.getElementById("teamSelectArea");
     area.innerHTML = `<h3>選擇球隊：</h3><select id="teamSelect"><option value="">請選擇</option>
       ${Object.keys(otherTeams).map(t => `<option value="${t}">${t}</option>`).join("")}
@@ -225,13 +233,16 @@
     const usePick = confirm("要附加一張首輪籤嗎？（點選「確定」表示會使用）");
     if (usePick && firstRoundPicks <= 0) return alert("你已經沒有首輪籤了！");
 
+    // 執行交易
     outgoingPlayers.forEach(p => {
       warriors = warriors.filter(w => w !== p);
     });
 
     warriors.push({ ...incomingPlayer, trainedToday: false });
 
+    // 把離開勇士的球員加到對方球隊
     otherTeams[team].splice(index, 1, ...outgoingPlayers);
+
     if (usePick) firstRoundPicks--;
 
     alert(`✅ 成功用 ${names.join(", ")} ${usePick ? "+ 首輪籤" : ""} 換來 ${incomingPlayer.name}！`);
@@ -240,18 +251,20 @@
     showOtherTeam(team);
     renderDate();
   };
-
-  function simulateGame() {
+    function simulateGame() {
     const today = new Date().toLocaleDateString();
     if (lastSimDate === today) return alert("今天已模擬過一場比賽！");
+
     const score = warriors.reduce((sum, p) => sum + ratingMap[p.rating] + Math.floor(Math.random() * 5), 0);
     const [teamName, players] = Object.entries(otherTeams)[Math.floor(Math.random() * Object.keys(otherTeams).length)];
     const oppScore = players.reduce((sum, p) => sum + ratingMap[p.rating] + Math.floor(Math.random() * 5), 0);
+
     const result = document.getElementById("gameResult");
     result.innerHTML = `<h2>模擬比賽結果</h2>
       <p>勇士 vs ${teamName}</p>
       <p>比分：${score} - ${oppScore}</p>
       <p>${score > oppScore ? "🎉 勇士勝利！" : "😢 勇士落敗..."}</p>`;
+
     lastSimDate = today;
     saveData();
     renderDate();
@@ -264,15 +277,18 @@
     showWarriors();
   }
 
+  // 🚀 頁面初始化
   document.addEventListener("DOMContentLoaded", () => {
     loadData();
     renderDate();
     showWarriors();
+
     document.getElementById("showWarriorsBtn").onclick = showWarriors;
     document.getElementById("showFreeAgentsBtn").onclick = showFreeAgents;
     document.getElementById("selectTeamBtn").onclick = selectTeam;
     document.getElementById("simulateGameBtn").onclick = simulateGame;
     document.getElementById("resetTrainingBtn").onclick = resetTraining;
+
     document.getElementById("clearBtn").onclick = () => {
       if (confirm("確定清空所有進度？")) {
         localStorage.removeItem("sj_gm_data");
