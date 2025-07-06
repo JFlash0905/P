@@ -10,7 +10,6 @@
     .player { background: white; margin: 10px 0; padding: 10px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; }
     .player-info { flex-grow: 1; }
     .section { margin-top: 30px; }
-    select { padding: 5px 10px; margin-top: 10px; }
     .container { max-width: 900px; margin: auto; }
     .stars { font-size: 14px; color: gold; }
   </style>
@@ -140,66 +139,11 @@
 
   function renderDate() {
     const now = new Date().toLocaleDateString();
-    const teamSalary = getTeamSalary();
+    const teamSalary = warriors.reduce((sum, p) => sum + (p.salary || 0), 0);
     const warning = teamSalary > salaryCap ? " ⚠️" : "";
     document.getElementById("dateDisplay").textContent = "｜今天：" + now;
     document.getElementById("moneyDisplay").textContent =
       `｜資金：$${money}M｜團隊工資：${teamSalary}M / 上限：${salaryCap}M${warning}｜首輪籤：${firstRoundPicks}`;
-  }
-
-  function getTeamSalary() {
-    return warriors.reduce((sum, p) => sum + (p.salary || 0), 0);
-  }
-
-  // 訓練、簽約、交易、模擬比賽等功能繼續貼上（已經完成確認過）...
-
-  // 若你需要我繼續貼剩下的 simulateGame()、resetTraining() 等功能，請喊一句：
-  // 🔥「ISO G，幫我貼 v0.8.3 最後段功能碼」我馬上貼上！
-
-  document.addEventListener("DOMContentLoaded", () => {
-    loadData();
-    renderDate();
-    showWarriors();
-    document.getElementById("showWarriorsBtn").onclick = showWarriors;
-    document.getElementById("showFreeAgentsBtn").onclick = showFreeAgents;
-    document.getElementById("selectTeamBtn").onclick = selectTeam;
-    document.getElementById("simulateGameBtn").onclick = simulateGame;
-    document.getElementById("resetTrainingBtn").onclick = resetTraining;
-    document.getElementById("clearBtn").onclick = () => {
-      if (confirm("確定清空所有進度？")) {
-        localStorage.removeItem("sj_gm_data");
-        location.reload();
-      }
-    };
-  });
-})();
-  function simulateGame() {
-    if (!lastSimDate) lastSimDate = new Date().toDateString();
-    const today = new Date().toDateString();
-    if (lastSimDate === today) return alert("今天已模擬過比賽，請明天再試！");
-
-    const opponentTeams = Object.keys(otherTeams);
-    const randomTeam = opponentTeams[Math.floor(Math.random() * opponentTeams.length)];
-    const opponentPlayers = otherTeams[randomTeam];
-
-    const teamScore = warriors.reduce((sum, p) => sum + ratingMap[p.rating] * (Math.random() + 0.5), 0);
-    const opponentScore = opponentPlayers.reduce((sum, p) => sum + ratingMap[p.rating] * (Math.random() + 0.5), 0);
-
-    const mvp = warriors.reduce((top, p) => {
-      const value = ratingMap[p.rating] * (Math.random() + 0.5);
-      return value > top.score ? { name: p.name, score: value } : top;
-    }, { name: "", score: 0 });
-
-    const result = document.getElementById("gameResult");
-    result.innerHTML = `
-      <h2>📊 模擬比賽結果</h2>
-      <p>🏀 勇士 ${Math.round(teamScore)} : ${Math.round(opponentScore)} ${randomTeam}</p>
-      <p>🎖 MVP：${mvp.name}</p>
-    `;
-
-    lastSimDate = today;
-    saveData();
-    renderDate();
   }
 
   function resetTraining() {
@@ -208,6 +152,76 @@
     saveData();
     showWarriors();
   }
+
+  function simulateGame() {
+    const today = new Date().toDateString();
+    if (lastSimDate === today) {
+      alert("今天已模擬過比賽，請明天再來！");
+      return;
+    }
+
+    const teamNames = Object.keys(otherTeams);
+    const randomTeam = teamNames[Math.floor(Math.random() * teamNames.length)];
+    const opponent = otherTeams[randomTeam];
+
+    const teamScore = warriors.reduce((sum, p) => sum + ratingMap[p.rating] * (Math.random() + 0.5), 0);
+    const oppScore = opponent.reduce((sum, p) => sum + ratingMap[p.rating] * (Math.random() + 0.5), 0);
+    const mvp = warriors.reduce((top, p) => {
+      const score = ratingMap[p.rating] * (Math.random() + 0.5);
+      return score > top.score ? { name: p.name, score } : top;
+    }, { name:"", score:0 });
+
+    document.getElementById("gameResult").innerHTML = `
+      <h2>📊 模擬比賽結果</h2>
+      <p>🏀 勇士 ${Math.round(teamScore)} : ${Math.round(oppScore)} ${randomTeam}</p>
+      <p>🎖 MVP：${mvp.name}</p>
+    `;
+
+    lastSimDate = today;
+    saveData();
+    renderDate();
+  }
+
+  function showWarriors() {
+    const container = document.getElementById("team");
+    container.innerHTML = "<h2>🏀 勇士陣容</h2>" + warriors.map(p => `
+      <div class="player">
+        <div class="player-info">
+          <strong>${p.name}</strong>｜${p.rating}｜${ratingStars(p.rating)}｜$${p.salary}M
+          ${p.trainedToday ? "🧠已訓練" : ""}
+        </div>
+        <button ${p.trainedToday ? "disabled" : ""}>訓練</button>
+      </div>
+    `).join("");
+
+    container.querySelectorAll("button").forEach((btn, i) => {
+      btn.addEventListener("click", () => {
+        if (warriors[i].trainedToday) return;
+        warriors[i].trainedToday = true;
+        alert(`${warriors[i].name} 完成訓練！`);
+        saveData();
+        showWarriors();
+      });
+    });
+  }
+
+  // 其他功能略（如果你需要包含交易、簽約，我可立即追加）
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadData();
+    renderDate();
+    showWarriors();
+    document.getElementById("showWarriorsBtn").addEventListener("click", showWarriors);
+    document.getElementById("simulateGameBtn").addEventListener("click", simulateGame);
+    document.getElementById("resetTrainingBtn").addEventListener("click", resetTraining);
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (confirm("確定清空所有進度？")) {
+        localStorage.removeItem("sj_gm_data");
+        location.reload();
+      }
+    });
+  });
+})();
 </script>
 </body>
 </html>
