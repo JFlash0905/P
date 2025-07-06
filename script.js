@@ -1,5 +1,8 @@
 (() => {
-  const ratingMap = { "C":1, "C+":2, "B-":3, "B":4, "B+":5, "A-":6, "A":7, "A+":8, "S":9, "S+":10 };
+  const ratingMap = {
+    "C": 1, "C+": 2, "B-": 3, "B": 4, "B+": 5,
+    "A-": 6, "A": 7, "A+": 8, "S": 9, "S+": 10
+  };
   const ratingStars = r => "★".repeat(Math.min(5, Math.round((ratingMap[r] || 1) / 2)));
 
   let warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate, firstRoundPicks;
@@ -7,71 +10,31 @@
   function defaultData() {
     return {
       warriors: [
-        { name:"Stephen Curry", rating:"S", salary:35, trainedToday:false },
-        { name:"Klay Thompson", rating:"B+", salary:20, trainedToday:false },
-        { name:"Draymond Green", rating:"B", salary:18, trainedToday:false },
-        { name:"Jonathan Kuminga", rating:"B", salary:15, trainedToday:false },
-        { name:"Andrew Wiggins", rating:"B+", salary:22, trainedToday:false },
-        { name:"Moses Moody", rating:"C+", salary:10, trainedToday:false },
-        { name:"Gary Payton II", rating:"C+", salary:9, trainedToday:false },
-        { name:"Brandin Podziemski", rating:"B-", salary:11, trainedToday:false },
-        { name:"Kevon Looney", rating:"C", salary:8, trainedToday:false }
+        { name: "Stephen Curry", rating: "S", salary: 35, trainedToday: false },
+        { name: "Klay Thompson", rating: "B+", salary: 20, trainedToday: false },
+        { name: "Draymond Green", rating: "B", salary: 18, trainedToday: false },
+        { name: "Jonathan Kuminga", rating: "B", salary: 15, trainedToday: false },
+        { name: "Andrew Wiggins", rating: "B+", salary: 22, trainedToday: false },
+        { name: "Moses Moody", rating: "C+", salary: 10, trainedToday: false },
+        { name: "Gary Payton II", rating: "C+", salary: 9, trainedToday: false },
+        { name: "Brandin Podziemski", rating: "B-", salary: 11, trainedToday: false },
+        { name: "Kevon Looney", rating: "C", salary: 8, trainedToday: false }
       ],
       freeAgents: [
-        { name:"Malik Beasley", rating:"B", salary:15, signChance:60 },
-        { name:"Robert Covington", rating:"B-", salary:12, signChance:50 },
-        { name:"Dennis Smith Jr.", rating:"B-", salary:9, signChance:55 },
-        { name:"Justise Winslow", rating:"C+", salary:7, signChance:45 },
-        { name:"Tristan Thompson", rating:"C", salary:6, signChance:50 }
+        { name: "Malik Beasley", rating: "B", salary: 15, signChance: 60 },
+        { name: "Robert Covington", rating: "B-", salary: 12, signChance: 50 },
+        { name: "Dennis Smith Jr.", rating: "B-", salary: 9, signChance: 55 },
+        { name: "Justise Winslow", rating: "C+", salary: 7, signChance: 45 },
+        { name: "Tristan Thompson", rating: "C", salary: 6, signChance: 50 }
       ],
       otherTeams: {
         "雷霆": [
-          { name:"Shai Gilgeous-Alexander", rating:"S", salary:34 },
-          { name:"Jalen Williams", rating:"A", salary:20 },
-          { name:"Chet Holmgren", rating:"A-", salary:18 },
-          { name:"Josh Giddey", rating:"B+", salary:16 },
-          { name:"Lu Dort", rating:"B", salary:14 },
-          { name:"Isaiah Joe", rating:"B-", salary:10 }
-        ],
-        "灰狼": [
-          { name:"Anthony Edwards", rating:"S", salary:32 },
-          { name:"Karl-Anthony Towns", rating:"A", salary:28 },
-          { name:"Rudy Gobert", rating:"B+", salary:25 },
-          { name:"Mike Conley", rating:"B", salary:15 },
-          { name:"Naz Reid", rating:"B", salary:14 },
-          { name:"Jaden McDaniels", rating:"B+", salary:16 }
-        ],
-        "金塊": [
-          { name:"Nikola Jokic", rating:"S+", salary:38 },
-          { name:"Jamal Murray", rating:"A", salary:27 },
-          { name:"Aaron Gordon", rating:"B+", salary:24 },
-          { name:"Michael Porter Jr.", rating:"B+", salary:22 },
-          { name:"Kentavious Caldwell-Pope", rating:"B", salary:15 },
-          { name:"Reggie Jackson", rating:"B-", salary:10 }
-        ],
-        "湖人": [
-          { name:"LeBron James", rating:"S", salary:36 },
-          { name:"Anthony Davis", rating:"S", salary:34 },
-          { name:"D’Angelo Russell", rating:"B+", salary:18 },
-          { name:"Austin Reaves", rating:"B", salary:14 },
-          { name:"Rui Hachimura", rating:"B-", salary:12 },
-          { name:"Gabe Vincent", rating:"C+", salary:8 }
-        ],
-        "熱火": [
-          { name:"Jimmy Butler", rating:"S", salary:32 },
-          { name:"Bam Adebayo", rating:"A", salary:28 },
-          { name:"Tyler Herro", rating:"B+", salary:18 },
-          { name:"Kyle Lowry", rating:"B", salary:15 },
-          { name:"Caleb Martin", rating:"B-", salary:11 },
-          { name:"Kevin Love", rating:"C+", salary:9 }
-        ],
-        "塞爾提克": [
-          { name:"Jayson Tatum", rating:"S", salary:34 },
-          { name:"Jaylen Brown", rating:"A+", salary:30 },
-          { name:"Kristaps Porzingis", rating:"A-", salary:25 },
-          { name:"Jrue Holiday", rating:"A-", salary:22 },
-          { name:"Derrick White", rating:"B+", salary:18 },
-          { name:"Al Horford", rating:"B", salary:14 }
+          { name: "Shai Gilgeous-Alexander", rating: "S", salary: 34 },
+          { name: "Jalen Williams", rating: "A", salary: 20 },
+          { name: "Chet Holmgren", rating: "A-", salary: 18 },
+          { name: "Josh Giddey", rating: "B+", salary: 16 },
+          { name: "Lu Dort", rating: "B", salary: 14 },
+          { name: "Isaiah Joe", rating: "B-", salary: 10 }
         ]
       },
       money: 100,
@@ -86,9 +49,7 @@
       const saved = JSON.parse(localStorage.getItem("sj_gm_data") || "null");
       if (saved && saved.warriors && saved.freeAgents && saved.otherTeams) {
         ({ warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate, firstRoundPicks } = saved);
-      } else {
-        throw new Error("無資料或格式錯誤");
-      }
+      } else throw new Error();
     } catch {
       ({ warriors, freeAgents, otherTeams, money, salaryCap, lastSimDate, firstRoundPicks } = defaultData());
       saveData();
@@ -121,7 +82,6 @@
       alert("今天已模擬過比賽，請明天再來！");
       return;
     }
-
     const teamNames = Object.keys(otherTeams);
     const randomTeam = teamNames[Math.floor(Math.random() * teamNames.length)];
     const opponent = otherTeams[randomTeam];
@@ -131,14 +91,13 @@
     const mvp = warriors.reduce((top, p) => {
       const score = ratingMap[p.rating] * (Math.random() + 0.5);
       return score > top.score ? { name: p.name, score } : top;
-    }, { name:"", score:0 });
+    }, { name: "", score: 0 });
 
     document.getElementById("gameResult").innerHTML = `
       <h2>📊 模擬比賽結果</h2>
       <p>🏀 勇士 ${Math.round(teamScore)} : ${Math.round(oppScore)} ${randomTeam}</p>
       <p>🎖 MVP：${mvp.name}</p>
     `;
-
     lastSimDate = today;
     saveData();
     renderDate();
@@ -149,8 +108,7 @@
     container.innerHTML = "<h2>🏀 勇士陣容</h2>" + warriors.map(p => `
       <div class="player">
         <div class="player-info">
-          <strong>${p.name}</strong>｜${p.rating}｜${ratingStars(p.rating)}｜$${p.salary}M
-          ${p.trainedToday ? "🧠已訓練" : ""}
+          <strong>${p.name}</strong>｜${p.rating}｜${ratingStars(p.rating)}｜$${p.salary}M ${p.trainedToday ? "🧠已訓練" : ""}
         </div>
         <button ${p.trainedToday ? "disabled" : ""}>訓練</button>
       </div>
